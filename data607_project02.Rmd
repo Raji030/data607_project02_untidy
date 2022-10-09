@@ -1,0 +1,197 @@
+---
+title: "project_02_data_607"
+author: "Mahmud Hasan Al Raji"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r }
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+```
+
+# Dataset1: This dataset is taken from discussion board (posted by Sangeetha Sashikumar). After collecting the dataset I put it my github account. With this dataset I will analyse the stuents grades based on their genders and ages. 
+
+```{r }
+data1<-data.frame(read.csv("https://raw.githubusercontent.com/Raji030/data607_project02/main/data607_project2.csv",sep=",", header = T))
+data1
+```
+
+# Transforming Gender column's numeric value into characters, male and female
+```{r }
+data1<-mutate(data1, Gender = case_when(Gender == 1 ~'girl',
+                                  Gender == 0 ~'boy'))
+data1
+```
+
+# Rounding Grades column numeric values to 2 decimal points
+```{r} 
+data1<-data1 %>% mutate_at('Grades', round, 2)
+data1
+```
+
+# Transforming Age clomun character values to numeric values and rounding the coulmn values in 1 decimel point
+```{r }
+data1$Age[2]<-7
+data1$Age[3]<-6
+data1
+data1$Age<-as.numeric(data1$Age)
+data1
+data1<-data1 %>% mutate_at('Age', round, 1)
+data1
+```
+# Analyzing the dataset to see gender wise highest grades, names and ages 
+```{r }
+data2<-data1%>%arrange(desc(Grades))
+data2
+data3<-data1%>%summarise(average=mean(Grades))
+data3
+data4<-data1[order(data1$Gender,-data1$Grades),]
+data4
+data1%>%ggplot(aes(x=" ",y=Grades,fill=Names))+geom_bar(stat="identity",position="dodge")+ xlab("Names") + ylab("Grades")
+```
+
+From the above tables, it is seen that the highest grade 93.50 is received by Anthony who is a 7 years boy. Elizabeth got the second highest grade, 92 and her grade is also the highest among all the girls' grades and she is 6. Also, Sally got the lowest grade 85 and the average grade is 90.195. The plot is also reflecting the grades by names where it is clearly found that Anthony has got the highest grade, Elizabeth has received the seocnd highest grade and Sally has received the lowest grade. 
+
+# Dataset2: This dataset is taken from discussion board (posted by Jhalak Das). After collecting the dataset I put it on my github account. This dataset will be analyzed to get average test scores of students.
+
+```{r }
+
+dataset2<-read.csv("https://raw.githubusercontent.com/Raji030/data_for_project2_607/main/student_results.csv",sep=",",header=T)
+dataset2
+```
+
+# Separating sex.and.age column into two columns, sex and age
+```{r }
+dataset02<-dataset2%>%separate(sex.and.age,into=c("sex","age"))
+dataset02
+```
+
+# Renaming column by removing dot character
+```{r }
+new_col_names <- 
+  colnames(dataset02) %>% 
+    str_replace_all("\\.", '_')
+
+colnames(dataset02) <- new_col_names
+head(dataset02,5)
+```
+# Pivoting three term columns into a single term column
+```{r }
+dataset03<-dataset02%>%pivot_longer(c("term_1","term_2","term_3"),names_to="term", values_to ="score" )
+dataset03
+```
+# Removing extra terms from column valuses
+
+```{r }
+dataset03$term <- str_extract(dataset03$term, "\\d")
+dataset03$test_number<-str_extract(dataset03$test_number,"\\d" )
+dataset03
+```
+
+# Finding students' average scores in different terms
+
+```{r }
+student_avg_scores <-
+  dataset03%>%group_by(name,term)%>%
+      summarise(avg_score = mean(score))
+head(student_avg_scores)
+student_avg_scores$name[which.max(student_avg_scores$avg_score)]
+student_avg_scores$term[which.max(student_avg_scores$avg_score)]
+student_avg_scores$name[which.min(student_avg_scores$avg_score)]
+student_avg_scores$term[which.min(student_avg_scores$avg_score)]
+```
+From the above average score table it is found that in term 3, Mike's average score is maximum whereas Mary scored  minimum in the same term. Students average scores are also depicted in the following plot.
+
+```{r }
+student_avg_scores%>%ggplot(aes(x=" ",y= avg_score,fill=name))+geom_bar(stat="identity",position="dodge")+ xlab("Names") + ylab("avg_scores")
+```
+
+
+## Dataset3: This dataset reflects the students performances in three different exams. Here, I examine students academic performances based on their gender, ethnicity, test preparation, parental level of education and type of lunch they are receiving. After collecting the dataset from kaggle.com, i put it in my github account. 
+
+```{r }
+students<-data.frame(read.csv("https://raw.githubusercontent.com/Raji030/project_02data/main/StudentsPerformance.csv", sep=",", header=TRUE, stringsAsFactors=FALSE))
+
+head(students)
+```
+
+# Renaming few columns
+
+```{r }
+names(students)[2] <- "race_ethnicity"
+names(students)[3] <- "parental_edu"
+names(students)[5]<- "test_prep"
+names(students)[6] <- "math_score"
+names(students)[7] <- "reading_score"
+names(students)[8] <- "writing_score"
+
+head(students)
+```
+
+# Sorting out students' math,writing and reading scores
+
+```{r }
+students_math<-students[order(students$math_score, decreasing = TRUE),]
+head(students_math)
+```
+
+By sorting out math scores, it is found that group E students have possessed the top three positions where two of them are female. It is also found that student in 6th position has received 100 percent in all three exams.
+
+```{r }
+students_reading<-students[order(students$reading_score, decreasing = TRUE),]
+head(students_reading)
+```
+
+By sorting out reading scores, it is seen that top two positions are held by female students from different ethnicity groups. It is also seen that among the 6 listed data, four positions are held by female students. Moreover, student at the top most position did not take any test preparation and her parental education level is masters.  
+
+```{r }
+students_writing<-students[order(students$writing_score, decreasing = TRUE),]
+head(students_writing)
+```
+
+By sorting out writing scores, it is seen that the top six spots are held by female students.Like reading section, the student at top most position in writing did not have test preparation and her parents have master level of education too.From the three academic performances, it is found that the students from ethnicity groups D,E,and C are doing much better than other ethnicity groups. 
+
+# Creating average score column and attaching it to the data frame
+
+```{r }
+students <- students %>%
+    mutate(avg_score= (math_score+ reading_score + writing_score)/3)
+
+head(students)
+
+```
+
+# subsetting dataframe 
+```{r }
+
+students_avg<-select(students, gender, lunch, parental_edu, avg_score)
+head(students_avg)
+```
+
+# Ordering avg score
+```{r }
+students_avg<-students_avg[order(students_avg$avg_score, decreasing = TRUE),]
+head(students_avg)
+```
+
+# Polotting average sccore against parental education level
+
+```{r }
+ggplot(students_avg, aes(x = "", y = avg_score, fill = parental_edu)) +  geom_bar(stat="identity",position="dodge") + 
+          xlab("parental_edducation") + ylab("average_score")
+
+```
+
+```{r }
+ggplot(students_avg, aes(x = "", y = avg_score, fill =lunch)) +  geom_bar(stat="identity",position="dodge") + 
+          xlab("lunch_type") + ylab("average_score")
+```
+By analyzing the above tables and plots, it is seen that students average academic performance vary about their parental level of education and type of lunch they are receiving. Students average scores are higher when their parents have associate and bachelor level of education. On the other hand, students who are receiving standard lunch are doing higher academic performances compared to those receiving free/reduced lunch.  
